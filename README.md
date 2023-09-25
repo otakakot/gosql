@@ -14,4 +14,3 @@ bun install prisma
 ```shell
 bun run prisma init
 ```
-
