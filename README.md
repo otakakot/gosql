@@ -1,0 +1,17 @@
+# gosql
+
+## bun & prisma
+
+```shell
+curl -fsSL https://bun.sh/install | bash
+```
+ref: https://bun.sh/
+
+```shell
+bun install prisma
+```
+
+```shell
+bun run prisma init
+```
+

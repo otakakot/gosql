@@ -1,0 +1,11 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model users {
+  id String @id
+  created_at DateTime
+  updated_at DateTime
+  is_deleted Boolean
+}
