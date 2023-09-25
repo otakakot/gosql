@@ -4,7 +4,7 @@ datasource db {
 }
 
 model users {
-  id String @id
+  id String @id @db.Uuid
   created_at DateTime
   updated_at DateTime
   is_deleted Boolean
