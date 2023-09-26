@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log/slog"
 	"time"
@@ -10,6 +11,9 @@ import (
 	"github.com/jackc/pgx/v5/stdlib"
 	"github.com/uptrace/bun"
 	"github.com/uptrace/bun/dialect/pgdialect"
+
+	"github.com/otakakot/gosql/internal/domain/entity"
+	"github.com/otakakot/gosql/internal/domain/model"
 )
 
 func main() {
@@ -22,34 +26,47 @@ func main() {
 	db := bun.NewDB(sqldb, pgdialect.New())
 	defer db.Close()
 
-	q1 := db.NewInsert().Model(&User{
+	us := &entity.User{
 		ID:        uuid.NewString(),
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 		IsDeleted: false,
-	}).String()
+	}
+
+	q1 := db.NewInsert().Model(us).String()
 
 	slog.Info(q1)
 
-	q2 := db.NewInsert().Model(&User{
+	un := &entity.UserName{
 		ID:        uuid.NewString(),
+		UserID:    us.ID,
+		Value:     uuid.NewString(),
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 		IsDeleted: false,
-	}).String()
+	}
+
+	q2 := db.NewInsert().Model(un).String()
 
 	slog.Info(q2)
 
 	if err := Transact(db, q1, q2); err != nil {
 		panic(err)
 	}
-}
 
-type User struct {
-	ID        string
-	CreatedAt time.Time
-	UpdatedAt time.Time
-	IsDeleted bool
+	user := &model.User{}
+	if err := db.NewSelect().
+		Model(user).
+		ColumnExpr("users.id AS id").
+		ColumnExpr("user_names.value AS name").
+		Table("users").
+		Join("JOIN user_names ON user_names.user_id = users.id").
+		Where("users.id = ?", us.ID).
+		Scan(context.Background()); err != nil {
+		panic(err)
+	}
+
+	slog.Info(fmt.Sprintf("%+v", user))
 }
 
 func Transact(db *bun.DB, queries ...string) error {
