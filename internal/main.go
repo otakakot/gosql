@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
-	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -12,8 +11,8 @@ import (
 	"github.com/uptrace/bun"
 	"github.com/uptrace/bun/dialect/pgdialect"
 
+	"github.com/otakakot/gosql/internal/adapter/gateway"
 	"github.com/otakakot/gosql/internal/domain/model"
-	"github.com/otakakot/gosql/internal/domain/schema"
 )
 
 func main() {
@@ -26,64 +25,32 @@ func main() {
 	db := bun.NewDB(sqldb, pgdialect.New())
 	defer db.Close()
 
-	us := &schema.User{
-		ID:        uuid.NewString(),
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
-		IsDeleted: false,
+	ctx := context.Background()
+
+	tx := gateway.Transactor{DB: db}
+
+	uc := gateway.UserCommand{DB: db}
+
+	uq := gateway.UserQuery{DB: db}
+
+	mdl := model.User{
+		ID:   uuid.NewString(),
+		Name: uuid.NewString(),
 	}
 
-	q1 := db.NewInsert().Model(us).String()
-
-	slog.Info(q1)
-
-	un := &schema.UserName{
-		ID:        uuid.NewString(),
-		UserID:    us.ID,
-		Value:     uuid.NewString(),
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
-		IsDeleted: false,
-	}
-
-	q2 := db.NewInsert().Model(un).String()
-
-	slog.Info(q2)
-
-	if err := Transact(db, q1, q2); err != nil {
-		panic(err)
-	}
-
-	user := &model.User{}
-	if err := db.NewSelect().
-		Model(user).
-		ColumnExpr("users.id AS id").
-		ColumnExpr("user_names.value AS name").
-		Table("users").
-		Join("JOIN user_names ON user_names.user_id = users.id").
-		Where("users.id = ?", us.ID).
-		Scan(context.Background()); err != nil {
-		panic(err)
-	}
-
-	slog.Info(fmt.Sprintf("%+v", user))
-}
-
-func Transact(db *bun.DB, queries ...string) error {
-	tx, err := db.Begin()
+	qs, err := uc.Create(ctx, mdl)
 	if err != nil {
-		return fmt.Errorf("failed to begin transaction: %w", err)
+		panic(err)
 	}
 
-	for _, query := range queries {
-		if _, err := tx.Exec(query); err != nil {
-			return fmt.Errorf("failed to execute query: %w", err)
-		}
+	if err := tx.Transact(ctx, qs...); err != nil {
+		panic(err)
 	}
 
-	if err := tx.Commit(); err != nil {
-		return fmt.Errorf("failed to commit transaction: %w", err)
+	got, err := uq.Find(ctx, mdl.ID)
+	if err != nil {
+		panic(err)
 	}
 
-	return nil
+	slog.Info(fmt.Sprintf("%+v", got))
 }
