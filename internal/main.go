@@ -12,8 +12,8 @@ import (
 	"github.com/uptrace/bun"
 	"github.com/uptrace/bun/dialect/pgdialect"
 
-	"github.com/otakakot/gosql/internal/domain/entity"
 	"github.com/otakakot/gosql/internal/domain/model"
+	"github.com/otakakot/gosql/internal/domain/schema"
 )
 
 func main() {
@@ -26,7 +26,7 @@ func main() {
 	db := bun.NewDB(sqldb, pgdialect.New())
 	defer db.Close()
 
-	us := &entity.User{
+	us := &schema.User{
 		ID:        uuid.NewString(),
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
@@ -37,7 +37,7 @@ func main() {
 
 	slog.Info(q1)
 
-	un := &entity.UserName{
+	un := &schema.UserName{
 		ID:        uuid.NewString(),
 		UserID:    us.ID,
 		Value:     uuid.NewString(),

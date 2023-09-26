@@ -1,4 +1,4 @@
-package entity
+package schema
 
 // データベースで扱う構造体
 // CQRSにおけるCommand実行時に扱う
