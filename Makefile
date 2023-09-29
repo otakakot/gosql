@@ -30,7 +30,7 @@ balus: ## destroy everything about docker. (containers, images, volumes, network
 
 .PHONY: migrate
 migrate:
-	@bun run prisma db push
+	@(cd schema && bun run prisma db push)
 
 .PHONY: psql
 psql:
@@ -38,4 +38,8 @@ psql:
 
 .PHONY: prisma
 prisma:
-	@bun run prisma studio
+	@(cd schema && bun run prisma studio)
+
+.PHONY: prismafmt
+prismafmt:
+	@(cd schema && bun run prisma format)

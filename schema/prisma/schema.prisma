@@ -4,16 +4,16 @@ datasource db {
 }
 
 model users {
-  id String @id @db.Uuid
+  id         String   @id @db.Uuid
   created_at DateTime
   updated_at DateTime
   is_deleted Boolean
 }
 
 model user_names {
-  id String @id @db.Uuid
-  user_id String @db.Uuid
-  value String
+  id         String   @id @db.Uuid
+  user_id    String   @db.Uuid 
+  value      String
   created_at DateTime
   updated_at DateTime
   is_deleted Boolean
